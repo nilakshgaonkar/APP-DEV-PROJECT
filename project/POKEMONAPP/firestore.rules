@@ -1,0 +1,53 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Users collection - for user profiles
+    match /users/{userId} {
+      // Allow users to read and write their own profile
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+    
+    // Trainers collection - for trainer profiles
+    match /trainers/{userId} {
+      // Allow authenticated users to read any trainer profile
+      allow read: if request.auth != null;
+      
+      // Allow users to create and update their own trainer profile
+      allow create, update: if request.auth != null && request.auth.uid == userId;
+      
+      // Prevent deletion of trainer profiles
+      allow delete: if false;
+    }
+    
+    // Trainer Stats collection - for tracking achievements
+    match /trainerStats/{userId} {
+      // Allow users to read and write their own stats
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+    
+    // Pokemon Storage collection - for caught Pokemon
+    match /pokemonStorage/{userId} {
+      // Allow users to read and write their own storage
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+      
+      match /caught/{pokemonId} {
+        allow read, write: if request.auth != null && request.auth.uid == userId;
+      }
+    }
+    
+    // Favorites collection - for user's favorite Pokemon
+    match /favorites/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+      
+      match /pokemon/{pokemonId} {
+        allow read, write: if request.auth != null && request.auth.uid == userId;
+      }
+    }
+    
+    // Default: deny all other access
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
